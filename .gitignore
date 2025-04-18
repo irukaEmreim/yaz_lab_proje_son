@@ -1,0 +1,11 @@
+# Django
+__pycache__/
+*.py[cod]
+*.sqlite3
+venv/
+.env
+
+# Node/Vue
+node_modules/
+dist/
+frontend/.env

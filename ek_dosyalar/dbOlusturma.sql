@@ -76,6 +76,7 @@ CREATE TABLE jury_reports (
     evaluation_result VARCHAR(10) CHECK(evaluation_result IN ('olumlu', 'olumsuz')),
     explanation TEXT,
     report_file_path TEXT,
+	evulation_score DECIMAL(5,2),
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -95,5 +96,7 @@ CREATE TABLE notifications (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     message TEXT,
-    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	is_read BOOLEAN DEFAULT FALSE
+
 );

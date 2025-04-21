@@ -11,6 +11,8 @@ from .serializers import JurySerializer
 
 from users.models import User
 from django.utils import timezone
+from .models import KadroKriterleri, PuanKriterleri, FaaliyetPuanlari, Bolum  # ✅ model burada
+from .serializers import KadroKriterSerializer, PuanKriterSerializer  # ✅ serializer burada
 
 # Yöneticinin kendisine atanmış başvuruları
 class AssignedApplicationViewSet(viewsets.ModelViewSet):
@@ -100,3 +102,51 @@ def create_jury(request):
     user.save()
 
     return Response({'message': 'Yeni jüri başarıyla oluşturuldu.'}, status=201)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def kadro_kriterleri_list_update(request):
+    if request.method == 'GET':
+        kriterler = KadroKriterleri.objects.all()
+        enriched = []
+
+        for k in kriterler:
+            # Bölüm adı
+            bolum_ad = Bolum.objects.filter(id=k.bolum_id).first()
+            
+            # Faaliyet kodlarını ayır ve adlarını bul
+            faaliyet_kodlari = k.faaliyet_kodu.split('-')
+            faaliyet_adlari = []
+
+            for kod in faaliyet_kodlari:
+                f = FaaliyetPuanlari.objects.filter(faaliyet_kodu=kod.strip()).first()
+                if f:
+                    faaliyet_adlari.append(f.faaliyet_adi)
+
+            enriched.append({
+                "id": k.id,
+                "unvan": k.unvan,
+                "bolum": bolum_ad.ad if bolum_ad else f"#{k.bolum_id}",
+                "faaliyet_kodu": k.faaliyet_kodu,
+                "faaliyet_adi": " \ ".join(faaliyet_adlari) if faaliyet_adlari else "",
+                "asgari_adet": k.asgari_adet
+            })
+
+        return Response(enriched)
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def puan_kriterleri_list_update(request):
+    if request.method == 'GET':
+        puanlar = PuanKriterleri.objects.all()
+        serializer = PuanKriterSerializer(puanlar, many=True)
+        return Response(serializer.data)
+    
+    elif request.method == 'PUT':
+        for item in request.data:
+            obj = PuanKriterleri.objects.get(id=item['id'])
+            obj.asgari_puan = item.get('asgari_puan')
+            obj.azami_puan = item.get('azami_puan')
+            obj.save()
+        return Response({'message': 'Puan kriterleri güncellendi'})

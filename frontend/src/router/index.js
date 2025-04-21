@@ -28,6 +28,14 @@ const routes = [
       { path: 'juri-ekle', component: YoneticiJuriEkle },
       { path: 'ilanlar', component: YoneticiIlanlar }
     ]
+  },
+  {
+    path: '/yonetici/kadro-kriterleri',
+    component: () => import('@/views/YoneticiKadroKriterleri.vue')
+  },
+  {
+    path: '/yonetici/puan-kriterleri',
+    component: () => import('@/views/YoneticiPuanKriterleri.vue')
   }
 ]
 

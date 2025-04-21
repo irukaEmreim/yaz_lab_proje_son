@@ -4,6 +4,9 @@ import AdminDashboard from '../views/AdminDashboard.vue'
 import AnnouncementList from '../views/AnnouncementList.vue'
 import AnnouncementNew from '../views/AnnouncementNew.vue'
 import ApplicationList from '../views/ApplicationList.vue'
+import YoneticiDashboard from '../views/YoneticiDashboard.vue'
+import YoneticiJuriEkle from '../views/YoneticiJuriEkle.vue'
+import YoneticiIlanlar from '../views/YoneticiIlanlar.vue'
 
 const routes = [
   { path: '/', name: 'Login', component: LoginView },
@@ -15,6 +18,15 @@ const routes = [
       { path: 'announcements', component: AnnouncementList },
       { path: 'announcements/new', component: AnnouncementNew },
       { path: 'applications', component: ApplicationList },
+    ]
+  },
+  {
+    path: '/yonetici',
+    name: 'YoneticiDashboard',
+    component: YoneticiDashboard,
+    children: [
+      { path: 'juri-ekle', component: YoneticiJuriEkle },
+      { path: 'ilanlar', component: YoneticiIlanlar }
     ]
   }
 ]

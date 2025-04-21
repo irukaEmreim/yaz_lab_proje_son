@@ -43,8 +43,12 @@ export default {
 
         if (role === 'admin') {
           this.$router.push('/admin')
-        } else {
-          alert("Giriş başarılı ama şu an sadece admin paneli aktif.")
+        } 
+        else if (role === 'yonetici') {
+          this.$router.push('/yonetici')
+        } 
+        else {
+          alert("Henüz sadece admin ve yönetici panelleri aktif.")
         }
 
       } catch (error) {

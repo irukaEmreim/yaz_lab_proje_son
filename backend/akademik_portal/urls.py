@@ -23,5 +23,6 @@ urlpatterns = [
     path('api/auth/', include('authentication.urls')),
     path('api/', include('announcements.urls')), 
     path('api/', include('applications.urls')),
+    path('api/', include('management.urls')),
 
 ]

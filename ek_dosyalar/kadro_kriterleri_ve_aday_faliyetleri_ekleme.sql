@@ -14,6 +14,11 @@ INSERT INTO bolumler (ad) VALUES
 select * from kadro_kriterleri
 select * from faaliyet_puanlari
 select * from puan_kriterleri
+select * from academic_announcements
+select * from application_documents
+select * from document_types
+select * from applications
+select * from bolumler
 CREATE TABLE kadro_kriterleri (
     id SERIAL PRIMARY KEY,
     bolum_id INTEGER REFERENCES bolumler(id),

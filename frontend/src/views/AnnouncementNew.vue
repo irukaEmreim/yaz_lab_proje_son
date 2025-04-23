@@ -13,6 +13,14 @@
         <option>Doçent</option>
         <option>Profesör</option>
       </select>
+      <label> Bölüm </label>
+      <select v-model="form.bolum_id" required>
+  <option disabled value="">Bölüm Seçiniz</option>
+  <option v-for="b in bolumler" :key="b.id" :value="b.id">
+    {{ b.ad }}
+  </option>
+</select>
+
 
       <label>Açıklama</label>
       <textarea v-model="form.description" placeholder="Açıklama" rows="3" />
@@ -42,28 +50,50 @@ export default {
         position_type: "",
         description: "",
         start_date: "",
-        end_date: ""
-      }
+        end_date: "",
+        bolum_id: ""
+      },
+      bolumler: []  // 💥 Eksikti, eklendi
     }
+  },
+  mounted() {
+    const token = localStorage.getItem("token")
+    axios.get("http://localhost:8000/api/bolumler/", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(res => {
+      this.bolumler = res.data
+    })
+    .catch(e => {
+      console.error("Bölümler alınamadı:", e)
+    })
   },
   methods: {
     async submit() {
       const token = localStorage.getItem("token")
       const decoded = jwtDecode(token)
+
       const payload = {
         ...this.form,
         created_by: decoded.user_id,
         created_at: new Date().toISOString().split("T")[0]
       }
-      await axios.post("http://127.0.0.1:8000/api/announcements/", payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      alert("Yeni ilan eklendi!")
-      this.$router.push("/admin/announcements")
+
+      try {
+        await axios.post("http://127.0.0.1:8000/api/announcements/", payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        alert("Yeni ilan eklendi!")
+        this.$router.push("/admin/announcements") 
+      } catch (err) {
+        console.error("İlan eklenemedi:", err)
+        alert("İlan eklenirken bir hata oluştu.")
+      }
     }
   }
 }
 </script>
+
 
 <style scoped>
 

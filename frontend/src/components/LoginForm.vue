@@ -47,8 +47,11 @@ export default {
         else if (role === 'yonetici') {
           this.$router.push('/yonetici')
         } 
+        else if(role == 'aday'){
+          this.$router.push('/aday')
+        }
         else {
-          alert("Henüz sadece admin ve yönetici panelleri aktif.")
+          alert("Henüz sadece admin, yönetici ve aday panelleri aktif.")
         }
 
       } catch (error) {

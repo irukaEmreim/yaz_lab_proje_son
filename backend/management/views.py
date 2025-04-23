@@ -112,10 +112,7 @@ def kadro_kriterleri_list_update(request):
         enriched = []
 
         for k in kriterler:
-            # Bölüm adı
             bolum_ad = Bolum.objects.filter(id=k.bolum_id).first()
-            
-            # Faaliyet kodlarını ayır ve adlarını bul
             faaliyet_kodlari = k.faaliyet_kodu.split('-')
             faaliyet_adlari = []
 
@@ -129,11 +126,25 @@ def kadro_kriterleri_list_update(request):
                 "unvan": k.unvan,
                 "bolum": bolum_ad.ad if bolum_ad else f"#{k.bolum_id}",
                 "faaliyet_kodu": k.faaliyet_kodu,
-                "faaliyet_adi": " \ ".join(faaliyet_adlari) if faaliyet_adlari else "",
+                "faaliyet_adi": " - ".join(faaliyet_adlari) if faaliyet_adlari else "-",
                 "asgari_adet": k.asgari_adet
             })
 
         return Response(enriched)
+
+    elif request.method == 'PUT':
+        try:
+            for item in request.data:
+                obj = KadroKriterleri.objects.get(id=item['id'])
+                obj.asgari_adet = item.get('asgari_adet', obj.asgari_adet)
+                obj.save()
+            return Response({'message': 'Kadro kriterleri güncellendi'})
+        except Exception as e:
+            print("Güncelleme hatası:", e)
+            return Response({'error': 'Güncelleme sırasında hata oluştu'}, status=500)
+
+    return Response({'detail': 'Method not allowed'}, status=405)
+
 
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated])

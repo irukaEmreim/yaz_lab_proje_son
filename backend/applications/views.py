@@ -2,6 +2,8 @@ from django.shortcuts import render
 from rest_framework import viewsets, permissions
 from .models import Application
 from .serializers import ApplicationSerializer
+from rest_framework import permissions
+from rest_framework.permissions import AllowAny
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -84,21 +86,27 @@ def belge_yukle(request):
 @permission_classes([permissions.IsAuthenticated])
 def basvurularim(request):
     user = request.user
+
     try:
+        # Sadece aday rolündeki kullanıcılar erişebilsin
+        if user.role != 'aday':
+            return Response({"error": "Yetkisiz erişim."}, status=403)
+
         basvurular = Application.objects.filter(candidate_id=user.id)
 
         data = []
         for basvuru in basvurular:
+            ilan_baslik = "Başlık bulunamadı"
             try:
                 ilan = AcademicAnnouncement.objects.get(id=basvuru.announcement_id)
                 ilan_baslik = ilan.title
             except AcademicAnnouncement.DoesNotExist:
-                ilan_baslik = "Başlık bulunamadı"
+                pass  # Eğer ilan bulunamazsa, zaten "Başlık bulunamadı" kalacak
 
             data.append({
                 "id": basvuru.id,
                 "announcement_id": basvuru.announcement_id,
-                "announcement_title": ilan_baslik,   # 📢 yeni eklenen kısım
+                "announcement_title": ilan_baslik,
                 "status": basvuru.status,
                 "submitted_at": basvuru.submitted_at,
             })
@@ -212,13 +220,22 @@ def juri_basvurulari(request):
     if user.role != 'juri':
         return Response({"error": "Yetkisiz erişim"}, status=403)
 
-    from management.models import Jury
+    from .models import Jury, JuryReport
     from applications.models import Application
     from announcements.models import AcademicAnnouncement, Bolum
 
+    # Jürinin atandığı ilanlar
     assigned_announcements = Jury.objects.filter(jury_member_id=user.id).values_list('announcement_id', flat=True)
 
-    basvurular = Application.objects.filter(announcement_id__in=assigned_announcements)
+    # Bu jürinin değerlendirdiği başvurular
+    degerlendirilen_app_ids = JuryReport.objects.filter(
+        jury_member_id=user.id
+    ).values_list('application_id', flat=True)
+
+    # Atandığı fakat henüz değerlendirmediği başvurular
+    basvurular = Application.objects.filter(
+        announcement_id__in=assigned_announcements
+    ).exclude(id__in=degerlendirilen_app_ids)
 
     data = []
     for basvuru in basvurular:
@@ -250,6 +267,7 @@ def juri_basvurulari(request):
         })
 
     return Response(data)
+
 
 
 @api_view(['GET'])
@@ -310,7 +328,6 @@ def juri_degerlendir(request):
         user = request.user  # juri kullanıcı
         if user.role != 'juri':
             return Response({"error": "Yetkisiz erişim"}, status=403)
-
         application_id = request.data.get('application_id')
         evaluation_result = request.data.get('sonuc')  # 'olumlu' veya 'olumsuz'
         description = request.data.get('degerlendirme_notu')  # 🔥 Açıklama geliyor!
@@ -345,3 +362,319 @@ def juri_degerlendir(request):
     except Exception as e:
         print("Jüri değerlendirme hatası:", e)
         return Response({"error": "Bir hata oluştu."}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def sonuclanacak_basvurular(request):
+    user = request.user
+
+    if user.role != 'yonetici':
+        return Response({"error": "Yetkisiz erişim"}, status=403)
+
+    from applications.models import Application
+    from management.models import Jury
+    from .models import JuryReport
+    from announcements.models import AcademicAnnouncement, Bolum
+
+    applications = Application.objects.filter(status='Beklemede')  # 🔥 Sadece bekleyen başvurular
+
+    sonuclanacaklar = []
+
+    for app in applications:
+        # 1. Bu başvuruya herhangi bir jüri değerlendirmesi yapılmış mı?
+        degerlendirme_var_mi = JuryReport.objects.filter(application_id=app.id).exists()
+
+        if not degerlendirme_var_mi:
+            continue  # Henüz hiçbir jüri değerlendirme yapmadıysa geç
+
+        # 2. Başvuru verilerini ekle
+        try:
+            ilan = AcademicAnnouncement.objects.get(id=app.announcement_id)
+            ilan_baslik = ilan.title
+            bolum_adi = None
+            if ilan.bolum_id:
+                try:
+                    bolum = Bolum.objects.get(id=ilan.bolum_id)
+                    bolum_adi = bolum.ad
+                except Bolum.DoesNotExist:
+                    bolum_adi = "Bölüm bulunamadı"
+            else:
+                bolum_adi = "Bölüm bilgisi yok"
+        except AcademicAnnouncement.DoesNotExist:
+            ilan_baslik = "Başlık bulunamadı"
+            bolum_adi = "Bölüm bilgisi yok"
+
+        sonuclanacaklar.append({
+            "application_id": app.id,
+            "announcement_title": ilan_baslik,
+            "department_name": bolum_adi,
+            "status": app.status,
+            "submitted_at": app.submitted_at
+        })
+
+    return Response(sonuclanacaklar)
+
+
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def basvuru_juri_raporlari(request, application_id):
+    user = request.user
+
+    if user.role != 'yonetici':
+        return Response({"error": "Yetkisiz erişim"}, status=403)
+
+    from .models import JuryReport
+    from users.models import User
+
+    try:
+        raporlar = JuryReport.objects.filter(application_id=application_id)
+
+        data = []
+        for rapor in raporlar:
+            try:
+                juri = User.objects.get(id=rapor.jury_member_id)
+                juri_adi = f"{juri.first_name} {juri.last_name}"
+            except User.DoesNotExist:
+                juri_adi = "Bilinmeyen Jüri"
+
+            data.append({
+                "jury_member_name": juri_adi,
+                "evaluation_result": rapor.evaluation_result,  # olumlu/olumsuz
+                "report_file_path": rapor.report_file_path,    # yüklenen dosya
+                "description": rapor.description,              # yazılan açıklama
+                "submitted_at": rapor.submitted_at,             # gönderim tarihi
+            })
+
+        return Response(data)
+
+    except Exception as e:
+        print("Jüri raporları çekilemedi:", e)
+        return Response({"error": "Jüri raporları bulunamadı."}, status=500)
+
+
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def basvuru_sonuclandir(request, application_id):
+    user = request.user
+
+    if user.role != 'yonetici':
+        return Response({"error": "Yetkisiz erişim"}, status=403)
+
+    from applications.models import Application
+
+    try:
+        app = Application.objects.get(id=application_id)
+        yeni_status = request.data.get('status')
+
+        if yeni_status not in ['Onaylandı', 'Reddedildi']:
+            return Response({"error": "Geçersiz durum."}, status=400)
+
+        app.status = yeni_status
+        app.save()
+
+        return Response({"message": "Başvuru durumu başarıyla güncellendi."})
+
+    except Application.DoesNotExist:
+        return Response({"error": "Başvuru bulunamadı."}, status=404)
+
+    except Exception as e:
+        print("Başvuru sonuçlandırma hatası:", e)
+        return Response({"error": "Bir hata oluştu."}, status=500)
+
+
+from weasyprint import HTML
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+import os
+
+from django.template.loader import render_to_string
+from weasyprint import HTML
+from django.http import HttpResponse
+import datetime
+
+from management.models import FaaliyetPuanlari
+from applications.models import ApplicationDocument
+from users.models import User
+from management.models import Bolum
+from django.utils.timezone import now  # En üste ekli olsun
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def tablo5_olustur(request, application_id):
+    try:
+        app = Application.objects.get(id=application_id)
+        aday = User.objects.get(id=app.candidate_id)
+        ilan = AcademicAnnouncement.objects.get(id=app.announcement_id)
+
+        bolum = None
+        if ilan.bolum_id:
+            try:
+                bolum = Bolum.objects.get(id=ilan.bolum_id)
+            except Bolum.DoesNotExist:
+                pass
+
+        tarih = timezone.now().strftime('%d.%m.%Y')
+
+        belgeler = ApplicationDocument.objects.filter(application=app)
+
+        # 🔥 A. Makaleler
+        faaliyetler_A = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='A')
+        faaliyet_puanlama_A = []
+        toplam_puan_A = 0
+        for faaliyet in faaliyetler_A:
+            belge_sayisi = belgeler.filter(faaliyet_kodu=faaliyet.faaliyet_kodu).count()
+            toplam = belge_sayisi * faaliyet.puan
+            toplam_puan_A += toplam
+            faaliyet_puanlama_A.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
+
+        # 🔥 B. Bilimsel Toplantı Faaliyetleri
+        faaliyetler_B = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='B')
+        faaliyet_puanlama_B = []
+        toplam_puan_B = 0
+        for faaliyet in faaliyetler_B:
+            belge_sayisi = belgeler.filter(faaliyet_kodu=faaliyet.faaliyet_kodu).count()
+            toplam = belge_sayisi * faaliyet.puan
+            toplam_puan_B += toplam
+            faaliyet_puanlama_B.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
+
+        # 🔥 C. Kitaplar
+        faaliyetler_C = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='C')
+        faaliyet_puanlama_C = []
+        toplam_puan_C = 0
+        for faaliyet in faaliyetler_C:
+            belge_sayisi = belgeler.filter(faaliyet_kodu=faaliyet.faaliyet_kodu).count()
+            toplam = belge_sayisi * faaliyet.puan
+            toplam_puan_C += toplam
+            faaliyet_puanlama_C.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
+
+        # 🔥 D. Atıflar
+        faaliyetler_D = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='D')
+        faaliyet_puanlama_D = []
+        toplam_puan_D = 0
+        for faaliyet in faaliyetler_D:
+            belge_sayisi = belgeler.filter(faaliyet_kodu=faaliyet.faaliyet_kodu).count()
+            toplam = belge_sayisi * faaliyet.puan
+            toplam_puan_D += toplam
+            faaliyet_puanlama_D.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
+
+        # 🔥 E. Eğitim Faaliyetleri
+        faaliyetler_E = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='E')
+        faaliyet_puanlama_E = []
+        toplam_puan_E = 0
+        for faaliyet in faaliyetler_E:
+            belge_sayisi = belgeler.filter(faaliyet_kodu=faaliyet.faaliyet_kodu).count()
+            toplam = belge_sayisi * faaliyet.puan
+            toplam_puan_E += toplam
+            faaliyet_puanlama_E.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
+
+        # 🔥 F. Danışmanlık Faaliyetleri (YENİ 🔥)
+        faaliyetler_F = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='F')
+        faaliyet_puanlama_F = []
+        toplam_puan_F = 0
+        for faaliyet in faaliyetler_F:
+            belge_sayisi = belgeler.filter(faaliyet_kodu=faaliyet.faaliyet_kodu).count()
+            toplam = belge_sayisi * faaliyet.puan
+            toplam_puan_F += toplam
+            faaliyet_puanlama_F.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
+        
+        # 🔥 G. Patent Faaliyetleri
+        faaliyetler_G = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='G')
+        faaliyet_puanlama_G = []
+        toplam_puan_G = 0
+        for faaliyet in faaliyetler_G:
+            belge_sayisi = belgeler.filter(faaliyet_kodu=faaliyet.faaliyet_kodu).count()
+            toplam = belge_sayisi * faaliyet.puan
+            toplam_puan_G += toplam
+            faaliyet_puanlama_G.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
+        
+        # 🔥 H. Araştırma Faaliyetleri
+        faaliyetler_H = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='H')
+        faaliyet_puanlama_H = []
+        toplam_puan_H = 0
+        for faaliyet in faaliyetler_H:
+            belge_sayisi = belgeler.filter(faaliyet_kodu=faaliyet.faaliyet_kodu).count()
+            toplam = belge_sayisi * faaliyet.puan
+            toplam_puan_H += toplam
+            faaliyet_puanlama_H.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
+
+        # 🔥 I. Editörlük Faaliyetleri
+        faaliyetler_I = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='I')
+        faaliyet_puanlama_I = []
+        toplam_puan_I = 0
+        for faaliyet in faaliyetler_I:
+            belge_sayisi = belgeler.filter(faaliyet_kodu=faaliyet.faaliyet_kodu).count()
+            toplam = belge_sayisi * faaliyet.puan
+            toplam_puan_I += toplam
+            faaliyet_puanlama_I.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
+
+        # 🔥 J. Ödüller
+        faaliyetler_J = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='J')
+        faaliyet_puanlama_J = []
+        toplam_puan_J = 0
+        for faaliyet in faaliyetler_J:
+            belge_sayisi = belgeler.filter(faaliyet_kodu=faaliyet.faaliyet_kodu).count()
+            toplam = belge_sayisi * faaliyet.puan
+            toplam_puan_J += toplam
+            faaliyet_puanlama_J.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
+
+# 🔥 K. Yöneticilik
+        faaliyetler_K = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='K')
+        faaliyet_puanlama_K = []
+        toplam_puan_K = 0
+        for faaliyet in faaliyetler_K:
+            belge_sayisi = belgeler.filter(faaliyet_kodu=faaliyet.faaliyet_kodu).count()
+            toplam = belge_sayisi * faaliyet.puan
+            toplam_puan_K += toplam
+            faaliyet_puanlama_K.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
+
+
+        genel_toplam_puan = (
+            toplam_puan_A + toplam_puan_B + toplam_puan_C +
+            toplam_puan_D + toplam_puan_E + toplam_puan_F +
+            toplam_puan_G + toplam_puan_H + toplam_puan_I +
+            toplam_puan_J + toplam_puan_K
+        )
+
+        html_string = render_to_string('tablo5_template.html', {
+            'ad_soyad': f"{aday.first_name} {aday.last_name}",
+            'kadro': ilan.position_type,
+            'bolum': bolum.ad if bolum else "Bölüm Bilgisi Yok",
+            'tarih': tarih,
+            'faaliyet_puanlama_A': faaliyet_puanlama_A,
+            'toplam_puan_A': toplam_puan_A,
+            'faaliyet_puanlama_B': faaliyet_puanlama_B,
+            'toplam_puan_B': toplam_puan_B,
+            'faaliyet_puanlama_C': faaliyet_puanlama_C,
+            'toplam_puan_C': toplam_puan_C,
+            'faaliyet_puanlama_D': faaliyet_puanlama_D,
+            'toplam_puan_D': toplam_puan_D,
+            'faaliyet_puanlama_E': faaliyet_puanlama_E,
+            'toplam_puan_E': toplam_puan_E,
+            'faaliyet_puanlama_F': faaliyet_puanlama_F,  # 📢 F'yi ekliyoruz
+            'toplam_puan_F': toplam_puan_F,
+            'faaliyet_puanlama_G' : faaliyet_puanlama_G,
+            'toplam_puan_G' : toplam_puan_G,
+            'faaliyet_puanlama_H': faaliyet_puanlama_H,  # 📢 H verilerini de ekliyoruz
+            'toplam_puan_H': toplam_puan_H,
+            'faaliyet_puanlama_I': faaliyet_puanlama_I,  # 📢 burayı da ekliyoruz
+            'toplam_puan_I': toplam_puan_I,
+            'faaliyet_puanlama_J': faaliyet_puanlama_J,  # 📢 Burası
+            'toplam_puan_J': toplam_puan_J,              # 📢 Burası
+            'faaliyet_puanlama_K': faaliyet_puanlama_K,  # 📢 Burası
+            'toplam_puan_K': toplam_puan_K,              # 📢 Burası
+            'genel_toplam_puan': genel_toplam_puan,  # 📢 Burası yeni
+        })
+
+        html = HTML(string=html_string)
+        pdf = html.write_pdf()
+
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="tablo5_{application_id}.pdf"'
+        return response
+
+    except Exception as e:
+        print("Tablo 5 oluşturulamadı:", e)
+        return Response({"error": "Tablo 5 oluşturulamadı."}, status=500)

@@ -7,6 +7,8 @@ class Application(models.Model):
     assigned_to = models.IntegerField(null=True)
     status = models.CharField(max_length=15)
     submitted_at = models.DateTimeField()
+    degerlendirildi_mi = models.BooleanField(default=False)
+    tablo5_pdf_path = models.TextField() 
 
     class Meta:
         managed = False

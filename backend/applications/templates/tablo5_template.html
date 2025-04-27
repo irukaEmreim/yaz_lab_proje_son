@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Tablo 5</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            padding: 30px;
+            background: white;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+        th, td {
+            border: 1px solid #666;
+            padding: 8px;
+            text-align: left;
+        }
+        .header-table td {
+            border: none;
+            padding: 5px;
+        }
+        .checkbox {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 1px solid #000;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        .checked {
+            background-color: black;
+        }
+        .section-title {
+            margin-top: 30px;
+            font-weight: bold;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <h2 style="text-align: center;">Kocaeli Üniversitesi</h2>
+
+    <table class="header-table">
+        <tr>
+            <td><strong>Adı Soyadı:</strong> {{ ad_soyad }}</td>
+            <td><strong>Tarih:</strong> {{ tarih }}</td>
+        </tr>
+        <tr>
+            <td><strong>Bölüm:</strong> {{ bolum }}</td>
+            <td><strong>Puanlanan Faaliyet Dönemi:</strong> 2023-2025</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>Başvurduğu Kadro:</strong> 
+                <span class="checkbox {% if kadro == 'Profesör' %}checked{% endif %}"></span> Profesör
+                <span class="checkbox {% if kadro == 'Doçent' %}checked{% endif %}"></span> Doçent
+                <span class="checkbox {% if kadro == 'Dr. Öğr. Üyesi' %}checked{% endif %}"></span> Dr. Öğr. Üyesi
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>İmza:</strong> ________________________</td>
+        </tr>
+    </table>
+
+    <!-- 🔥 A. Makaleler Başlığı -->
+    <div class="section-title">A. Makaleler</div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Faaliyet Açıklaması</th>
+                <th>Puan</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for faaliyet in faaliyet_puanlama_A %}
+                <tr>
+                    <td>{{ faaliyet.aciklama }}</td>
+                    <td>{{ faaliyet.puan }}</td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td><strong>Toplam Puan</strong></td>
+                <td><strong>{{ toplam_puan_A }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 🔥 B. Bilimsel Toplantı Faaliyetleri Başlığı -->
+    <div class="section-title">B. Bilimsel Toplantı Faaliyetleri</div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Faaliyet Açıklaması</th>
+                <th>Puan</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for faaliyet in faaliyet_puanlama_B %}
+                <tr>
+                    <td>{{ faaliyet.aciklama }}</td>
+                    <td>{{ faaliyet.puan }}</td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td><strong>Toplam Puan</strong></td>
+                <td><strong>{{ toplam_puan_B }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 🔥 C. Kitaplar Başlığı -->
+<div class="section-title">C. Kitaplar</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Faaliyet Açıklaması</th>
+            <th>Puan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for faaliyet in faaliyet_puanlama_C %}
+            <tr>
+                <td>{{ faaliyet.aciklama }}</td>
+                <td>{{ faaliyet.puan }}</td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td><strong>Toplam Puan</strong></td>
+            <td><strong>{{ toplam_puan_C }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- 🔥 D. Atıflar -->
+<div class="section-title">D. Atıflar</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Faaliyet Açıklaması</th>
+            <th>Puan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for faaliyet in faaliyet_puanlama_D %}
+            <tr>
+                <td>{{ faaliyet.aciklama }}</td>
+                <td>{{ faaliyet.puan }}</td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td><strong>Toplam Puan</strong></td>
+            <td><strong>{{ toplam_puan_D }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- 🔥 E. Eğitim Faaliyetleri -->
+<div class="section-title">E. Eğitim Faaliyetleri</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Faaliyet Açıklaması</th>
+            <th>Puan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for faaliyet in faaliyet_puanlama_E %}
+            <tr>
+                <td>{{ faaliyet.aciklama }}</td>
+                <td>{{ faaliyet.puan }}</td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td><strong>Toplam Puan</strong></td>
+            <td><strong>{{ toplam_puan_E }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+<!-- 🔥 F. Danışmanlık Faaliyetleri -->
+<div class="section-title">F. Danışmanlık Faaliyetleri</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Faaliyet Açıklaması</th>
+            <th>Puan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for faaliyet in faaliyet_puanlama_F %}
+            <tr>
+                <td>{{ faaliyet.aciklama }}</td>
+                <td>{{ faaliyet.puan }}</td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td><strong>Toplam Puan</strong></td>
+            <td><strong>{{ toplam_puan_F }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+<div class="section-title">G. Patent Faaliyetleri</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Faaliyet Açıklaması</th>
+            <th>Puan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for faaliyet in faaliyet_puanlama_G %}
+            <tr>
+                <td>{{ faaliyet.aciklama }}</td>
+                <td>{{ faaliyet.puan }}</td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td><strong>Toplam Puan</strong></td>
+            <td><strong>{{ toplam_puan_G }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+<!-- 🔥 H. Araştırma Faaliyetleri -->
+<div class="section-title">H. Araştırma Faaliyetleri</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Faaliyet Açıklaması</th>
+            <th>Puan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for faaliyet in faaliyet_puanlama_H %}
+            <tr>
+                <td>{{ faaliyet.aciklama }}</td>
+                <td>{{ faaliyet.puan }}</td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td><strong>Toplam Puan</strong></td>
+            <td><strong>{{ toplam_puan_H }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+<!-- 🔥 I. Editörlük Faaliyetleri -->
+<div class="section-title">I. Editörlük Faaliyetleri</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Faaliyet Açıklaması</th>
+            <th>Puan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for faaliyet in faaliyet_puanlama_I %}
+            <tr>
+                <td>{{ faaliyet.aciklama }}</td>
+                <td>{{ faaliyet.puan }}</td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td><strong>Toplam Puan</strong></td>
+            <td><strong>{{ toplam_puan_I }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- 🔥 J. Ödüller -->
+<div class="section-title">J. Ödüller</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Faaliyet Açıklaması</th>
+            <th>Puan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for faaliyet in faaliyet_puanlama_J %}
+            <tr>
+                <td>{{ faaliyet.aciklama }}</td>
+                <td>{{ faaliyet.puan }}</td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td><strong>Toplam Puan</strong></td>
+            <td><strong>{{ toplam_puan_J }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+<!-- 🔥 K. Yöneticilik -->
+<div class="section-title">K. Yöneticilik</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Faaliyet Açıklaması</th>
+            <th>Puan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for faaliyet in faaliyet_puanlama_K %}
+            <tr>
+                <td>{{ faaliyet.aciklama }}</td>
+                <td>{{ faaliyet.puan }}</td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td><strong>Toplam Puan</strong></td>
+            <td><strong>{{ toplam_puan_K }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+<!-- 🔥 Genel Toplam -->
+<div class="section-title">GENEL TOPLAM PUAN</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Genel Toplam</th>
+            <th>{{ genel_toplam_puan }}</th>
+        </tr>
+    </thead>
+</table>
+
+
+
+</body>
+</html>

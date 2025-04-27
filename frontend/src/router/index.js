@@ -90,7 +90,18 @@ const routes = [
     path: '/juri/basvuru/:id',
     name: 'JuriBasvuruDetay',
     component: () => import('@/views/JuriBasvuruDetay.vue')
-  }
+  },
+  {
+    path: '/yonetici/yonetici-degerlendirilecek-ilanlar',
+    component: () => import('@/views/YoneticiDegerlendirilecekIlanlariListeleme.vue'),  // 🔥 Dosya adını buna göre ayarla
+    meta: { requiresAuth: true, role: 'yonetici' }
+  },
+  {
+    path: '/yonetici/basvuru/:id/sonuclandir',
+    name: 'YoneticiDegerlendirme',
+    component: () => import('@/views/YoneticiDegerlendirme.vue'),
+    meta: { requiresAuth: true, role: 'yonetici' }
+  },
   
   
 ]

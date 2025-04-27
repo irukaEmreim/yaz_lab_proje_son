@@ -5,7 +5,8 @@ from .views import (
     basvuru_yap, belge_yukle, basvurularim, faaliyetler_by_application,
     belgeler_by_application, basvuru_detay, profilim, profil_guncelle,
     sifre_guncelle, juri_basvurulari,aday_bilgileri, faaliyet_turleri_by_application,
-    juri_degerlendir
+    juri_degerlendir, basvuru_juri_raporlari,  basvuru_sonuclandir, sonuclanacak_basvurular,
+    tablo5_olustur, 
 )
 
 router = DefaultRouter()
@@ -25,6 +26,11 @@ urlpatterns = router.urls + [
     path('aday-bilgileri/<int:app_id>/', aday_bilgileri),
     path('faaliyet-turleri/<int:app_id>/', faaliyet_turleri_by_application),
     path('juri/degerlendir/', juri_degerlendir),
+    path('basvuru/<int:application_id>/jury-raporlari/', basvuru_juri_raporlari),
+    path('basvuru-sonuclandir/<int:application_id>/', basvuru_sonuclandir),
+    path('sonuclanacak-basvurular/', sonuclanacak_basvurular),
+    path('tablo5/<int:application_id>/', tablo5_olustur),
+    path('tablo5-olustur/<int:application_id>/', tablo5_olustur),
 
 
 ]

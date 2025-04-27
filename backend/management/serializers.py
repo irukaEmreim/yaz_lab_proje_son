@@ -15,3 +15,10 @@ class PuanKriterSerializer(serializers.ModelSerializer):
     class Meta:
         model = PuanKriterleri
         fields = '__all__'
+
+
+from .models import FaaliyetPuanlari
+class FaaliyetPuanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FaaliyetPuanlari
+        fields = '__all__'

@@ -56,10 +56,42 @@ const routes = [
     meta: { requiresAuth: true, role: 'aday' }
   },
   {
-    path: '/aday/basvuru/:id',
+    path: '/aday/ilan/:id/basvur',
+    name: 'BasvuruForm',
     component: BasvuruForm,
     meta: { requiresAuth: true, role: 'aday' }
+  },
+  {
+    path: '/aday/basvurularim',
+    name: 'Basvurularim',
+    component: () => import('@/views/AdayBasvurularim.vue')
+  },
+  {
+    path: '/aday/basvuru/:id',
+    name: 'BasvuruDetay',
+    component: () => import('@/views/BasvuruDetay.vue')
+  },
+  {
+    path: '/aday/profilim',
+    name: 'Profilim',
+    component: () => import('@/views/AdayProfilim.vue')
+  },
+  {
+    path: '/uye-ol',
+    name: 'AdayRegister',
+    component: () => import('@/views/AdayRegister.vue')
+  },
+  {
+    path: '/juri/dashboard',
+    name: 'JuriDashboard',
+    component: () => import('@/views/JuriDashboard.vue')
+  },
+  {
+    path: '/juri/basvuru/:id',
+    name: 'JuriBasvuruDetay',
+    component: () => import('@/views/JuriBasvuruDetay.vue')
   }
+  
   
 ]
 

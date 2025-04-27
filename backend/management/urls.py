@@ -1,6 +1,7 @@
 from rest_framework.routers import DefaultRouter
 from .views import AssignedApplicationViewSet, get_juries, add_jury, get_available_juries, create_jury, kadro_kriterleri_list_update, puan_kriterleri_list_update
 from django.urls import path
+from .views import faaliyet_puanlari_list
 
 router = DefaultRouter()
 router.register(r'yonetici/basvurular', AssignedApplicationViewSet, basename='assigned-apps')
@@ -12,5 +13,6 @@ urlpatterns = router.urls + [
     path('juri-olustur/', create_jury),
     path('kadro-kriterleri/', kadro_kriterleri_list_update),
     path('puan-kriterleri/', puan_kriterleri_list_update),
+    path('faaliyet-puanlari/', faaliyet_puanlari_list),
     
 ]

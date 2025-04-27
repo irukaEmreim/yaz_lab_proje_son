@@ -40,21 +40,13 @@ CREATE TABLE applications (
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ===============================
--- 4. Belge Türleri Tablosu
--- ===============================
-CREATE TABLE document_types (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL
-);
 
 -- ===============================
 -- 5. Başvuru Belgeleri Tablosu
 -- ===============================
-CREATE TABLE application_documents (
+CREATE TABLE application_documents ( ------ YENİDEN OLUŞACAK
     id SERIAL PRIMARY KEY,
     application_id INTEGER REFERENCES applications(id),
-    document_type_id INTEGER REFERENCES document_types(id),
     file_path TEXT,
     description TEXT,
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -86,13 +78,14 @@ CREATE TABLE juries (
 -- ===============================
 CREATE TABLE jury_reports (
     id SERIAL PRIMARY KEY,
-    application_id INTEGER REFERENCES applications(id),
-    jury_member_id INTEGER REFERENCES users(id),
-    evaluation_result VARCHAR(10) CHECK(evaluation_result IN ('olumlu', 'olumsuz')),
-    score DECIMAL(5,2),
+    application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,
+    jury_member_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    evaluation_result VARCHAR(10) CHECK (evaluation_result IN ('olumlu', 'olumsuz')),
     report_file_path TEXT,
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE jury_reports ADD COLUMN description Text;
+
 
 -- ===============================
 -- 9. Akademik Faaliyetler Tablosu
@@ -118,12 +111,6 @@ CREATE TABLE notifications (
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO document_types (name) VALUES
-('İndeksli Yayın'),
-('Diploma'),
-('Yabancı Dil Belgesi'),
-('Öğretim Belgesi');
-
 
 INSERT INTO users (tc_kimlik_no, first_name, last_name, email, password, role, is_active, is_staff, is_superuser) VALUES
 ('12345678901', 'Ahmet', 'Yılmaz', 'ahmet.yilmaz@admin.com', 'ahmet123', 'admin',TRUE,FALSE,FALSE),
@@ -138,8 +125,8 @@ INSERT INTO applications (announcement_id, candidate_id) VALUES
 (1, 2);
 
 -- Belge türü olarak 'İndeksli Yayın' = ID: 1
-INSERT INTO application_documents (application_id, document_type_id, file_path, description) VALUES
-(1, 1, '/uploads/yayin1.pdf', 'SCI-E dergisinde yayınlanmış makale.');
+INSERT INTO application_documents (application_id, file_path, description) VALUES
+(1, '/uploads/yayin1.pdf', 'SCI-E dergisinde yayınlanmış makale.');
 
 INSERT INTO application_criteria (announcement_id, criteria, created_by) VALUES
 (1, '{"minimum_makale": 4, "minimum_puan": 75}', 4);
@@ -147,7 +134,7 @@ INSERT INTO application_criteria (announcement_id, criteria, created_by) VALUES
 INSERT INTO juries (announcement_id, jury_member_id) VALUES
 (1, 3);
 
-INSERT INTO jury_reports (application_id, jury_member_id, evaluation_result, score, report_file_path) VALUES
+INSERT INTO jury_reports (application_id, jury_member_id, evaluation_result, report_file_path) VALUES
 (1, 3, 'olumlu', 87.5, '/uploads/report1.pdf');
 
 INSERT INTO academic_activities (application_id, activity_type, activity_name, activity_score, activity_details) VALUES

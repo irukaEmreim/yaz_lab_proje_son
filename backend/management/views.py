@@ -161,3 +161,17 @@ def puan_kriterleri_list_update(request):
             obj.azami_puan = item.get('azami_puan')
             obj.save()
         return Response({'message': 'Puan kriterleri güncellendi'})
+    
+
+from .models import FaaliyetPuanlari
+from .serializers import FaaliyetPuanSerializer
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def faaliyet_puanlari_list(request):
+    puanlar = FaaliyetPuanlari.objects.all()
+    serializer = FaaliyetPuanSerializer(puanlar, many=True)
+    return Response(serializer.data)
+
+
+

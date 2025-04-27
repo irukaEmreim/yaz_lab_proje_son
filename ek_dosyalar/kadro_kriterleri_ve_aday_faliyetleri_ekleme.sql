@@ -15,8 +15,21 @@ select * from kadro_kriterleri
 select * from faaliyet_puanlari
 select * from puan_kriterleri
 select * from academic_announcements
+
 select * from application_documents
-select * from document_types
+
+ALTER TABLE application_documents ADD COLUMN faaliyet_kodu VARCHAR(10);
+
+TRUNCATE TABLE application_documents CASCADE
+DROP TABLE appliaction_documents
+
+select * from users
+select * from juries
+select * from application_activities
+select * from applications
+select * from academic_announcements
+TRUNCATE TABLE applications CASCADE
+select * from jury_reports
 select * from applications
 select * from bolumler
 CREATE TABLE kadro_kriterleri (

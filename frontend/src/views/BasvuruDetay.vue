@@ -23,54 +23,70 @@
           </li>
         </ul>
       </div>
+      <div v-if="basvuru.tablo5_pdf_path" class="mt-6">
+  <a :href="getPdfUrl(basvuru.tablo5_pdf_path)" target="_blank" class="pdf-link">
+    📄 Tablo 5 PDF'ini Görüntüle
+  </a>
+</div>
+<div v-else class="mt-6 text-gray-400">
+  Tablo 5 henüz oluşturulmamış.
+</div>
     </div>
   </template>
   
   <script>
-  import axios from 'axios';
+  import axios from 'axios'
   
   export default {
     data() {
       return {
         basvuru: {},
-        faaliyetler: [],
         belgeler: [],
+        faaliyetler: [],
         loading: true
-      };
+      }
     },
     async created() {
       const token = localStorage.getItem('token');
       const appId = this.$route.params.id;
   
       try {
-        const [b, f1, f2] = await Promise.all([
+        const [basvuruRes, belgelerRes, faaliyetlerRes] = await Promise.all([
           axios.get(`http://localhost:8000/api/basvuru-detay/${appId}/`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get(`http://localhost:8000/api/belgeler/${appId}/`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
           axios.get(`http://localhost:8000/api/faaliyetler/${appId}/`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get(`http://localhost:8000/api/belgeler/${appId}/`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-        ]);
-        this.basvuru = b.data;
-        this.faaliyetler = f1.data;
-        this.belgeler = f2.data;
+        ])
+  
+        this.basvuru = basvuruRes.data;
+        this.belgeler = belgelerRes.data;
+        this.faaliyetler = faaliyetlerRes.data;
+  
       } catch (err) {
-        console.error('Detaylar yüklenemedi:', err);
-        alert("Detaylar yüklenirken hata oluştu.");
+        console.error("Veriler alınamadı:", err);
+        alert("Bir hata oluştu.");
       } finally {
         this.loading = false;
       }
     },
     methods: {
-      formatDate(date) {
-        return new Date(date).toLocaleDateString('tr-TR');
-      }
+      getPdfUrl(filePath) {
+        return `http://localhost:8000/media/${filePath}`
+      },
+      formatDate(dateString) {
+      if (!dateString) return '-';
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString('tr-TR', options);
+    }
     }
   }
   </script>
+  
   
   <style scoped>
   .basvuru-detay {

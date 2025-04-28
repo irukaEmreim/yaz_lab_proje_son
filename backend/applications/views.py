@@ -157,12 +157,16 @@ def belgeler_by_application(request, app_id):
 @permission_classes([permissions.IsAuthenticated])
 def basvuru_detay(request, app_id):
     try:
+        from applications.models import Application
+        app = Application.objects.get(id=app_id)
+        
         basvuru = Application.objects.get(id=app_id)
         data = {
             "id": basvuru.id,
             "announcement_id": basvuru.announcement_id,
             "status": basvuru.status,
             "submitted_at": basvuru.submitted_at,
+            "tablo5_pdf_path": app.tablo5_pdf_path,  # Tablo 5 PDF yolu
         }
         return Response(data)
     except Application.DoesNotExist:
@@ -500,6 +504,8 @@ from applications.models import ApplicationDocument
 from users.models import User
 from management.models import Bolum
 from django.utils.timezone import now  # En üste ekli olsun
+import os
+from django.conf import settings
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -671,10 +677,89 @@ def tablo5_olustur(request, application_id):
         html = HTML(string=html_string)
         pdf = html.write_pdf()
 
-        response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = f'inline; filename="tablo5_{application_id}.pdf"'
-        return response
+        pdf_folder = os.path.join(settings.MEDIA_ROOT, 'tablo5')
+        os.makedirs(pdf_folder, exist_ok=True)
+
+        pdf_fileename = f"tablo5_{application_id}.pdf"
+        pdf_path = os.path.join(pdf_folder, pdf_fileename)
+
+        with open(pdf_path, 'wb') as f:
+            f.write(pdf)
+        app.tablo5_pdf_path = f'tablo5/{pdf_fileename}'
+        app.save()
+
+        return Response ({"message": "Tablo 5 başarıyla oluşturuldu ve kaydedildi."}) 
+        #response = HttpResponse(pdf, content_type='application/pdf')
+        #response['Content-Disposition'] = f'inline; filename="tablo5_{application_id}.pdf"'
+        #return response
 
     except Exception as e:
         print("Tablo 5 oluşturulamadı:", e)
         return Response({"error": "Tablo 5 oluşturulamadı."}, status=500)
+"""
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def tablo5_olustur(request, application_id):
+    from weasyprint import HTML
+    from django.template.loader import render_to_string
+    import os
+    from django.conf import settings
+
+    try:
+        app = Application.objects.get(id=application_id)
+        aday = User.objects.get(id=app.candidate_id)
+        ilan = AcademicAnnouncement.objects.get(id=app.announcement_id)
+
+        bolum = None
+        if ilan.bolum_id:
+            try:
+                bolum = Bolum.objects.get(id=ilan.bolum_id)
+            except Bolum.DoesNotExist:
+                pass
+
+        tarih = timezone.now().strftime('%d.%m.%Y')
+
+        faaliyetler = FaaliyetPuanlari.objects.all()
+        belgeler = ApplicationDocument.objects.filter(application=app)
+
+        faaliyet_puanlama_listesi = []
+        for faaliyet in faaliyetler:
+            belge_sayisi = belgeler.filter(faaliyet_kodu=faaliyet.faaliyet_kodu).count()
+            toplam_puan = belge_sayisi * faaliyet.puan
+
+            faaliyet_puanlama_listesi.append({
+                'kategori': faaliyet.faaliyet_kodu[0],
+                'aciklama': faaliyet.aciklama,
+                'puan': toplam_puan
+            })
+
+        html_string = render_to_string('tablo5_template.html', {
+            'ad_soyad': f"{aday.first_name} {aday.last_name}",
+            'kadro': ilan.position_type,
+            'bolum': bolum.ad if bolum else "Bölüm Bilgisi Yok",
+            'tarih': tarih,
+            'faaliyet_puanlama_listesi': faaliyet_puanlama_listesi
+        })
+
+        html = HTML(string=html_string)
+        pdf_file = html.write_pdf()
+
+        pdf_folder = os.path.join(settings.MEDIA_ROOT, 'tablo5')
+        os.makedirs(pdf_folder, exist_ok=True)
+
+        pdf_filename = f"tablo5_{app.id}.pdf"
+        pdf_path = os.path.join(pdf_folder, pdf_filename)
+
+        with open(pdf_path, 'wb') as f:
+            f.write(pdf_file)
+
+        app.tablo5_pdf_path = f'tablo5/{pdf_filename}'
+        app.save()
+
+        return Response({"message": "Tablo5 başarıyla oluşturuldu ve kaydedildi."})
+
+    except Exception as e:
+        print("Tablo 5 oluşturulamadı:", e)
+        return Response({"error": "Tablo 5 oluşturulamadı."}, status=500)
+"""

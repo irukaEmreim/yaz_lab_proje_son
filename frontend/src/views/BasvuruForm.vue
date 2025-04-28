@@ -139,7 +139,7 @@ export default {
     }
 
     alert("✅ Başvuru ve belgeler başarıyla gönderildi!");
-    this.$router.push("/aday");
+    this.$router.push(`/aday/tablo5-olustur/${applicationId}`);
 
   } catch (err) {
     console.error("❌ Başvuru gönderilirken hata:", err);

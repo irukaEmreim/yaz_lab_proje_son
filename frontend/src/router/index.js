@@ -102,6 +102,12 @@ const routes = [
     component: () => import('@/views/YoneticiDegerlendirme.vue'),
     meta: { requiresAuth: true, role: 'yonetici' }
   },
+  {
+    path: '/aday/tablo5-olustur/:id',
+    name: 'Tablo5Olustur',
+    component: () => import('@/views/Tablo5Olustur.vue'),
+    meta: { requiresAuth: true, role: 'aday' }
+  }
   
   
 ]

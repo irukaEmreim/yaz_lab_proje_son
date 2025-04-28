@@ -1,38 +1,56 @@
 <template>
-    <div class="basvuru-detay">
-      <h2 class="text-2xl font-bold mb-4">📄 Başvuru Detayı</h2>
-  
-      <div v-if="loading">Yükleniyor...</div>
-      <div v-else>
-        <!-- BURASI YENİ: Başvuru Durumu -->
-        <div class="durum-blok">
-          <h1>{{ basvuru.status }}</h1>
-        </div>
-  
-        <h3 class="text-lg font-semibold mb-2">🧾 Faaliyetler</h3>
-        <ul>
-          <li v-for="faaliyet in faaliyetler" :key="faaliyet.id">
+  <div class="basvuru-detay">
+    <h2 class="baslik">📄 Başvuru Detayı</h2>
+
+    <div v-if="loading" class="yukleniyor">
+      Yükleniyor...
+    </div>
+
+    <div v-else>
+      <!-- Başvuru Durumu -->
+      <div class="kart durum-karti">
+        <h3 class="kart-baslik">🟢 Başvuru Durumu</h3>
+        <p class="durum">{{ basvuru.status }}</p>
+      </div>
+
+      <!-- Faaliyetler -->
+      <div class="kart">
+        <h3 class="kart-baslik">🧾 Faaliyetler</h3>
+        <ul class="liste">
+          <li v-for="faaliyet in faaliyetler" :key="faaliyet.id" class="liste-oge">
             {{ faaliyet.faaliyet_kodu }} - {{ faaliyet.adet }} adet
           </li>
         </ul>
-  
-        <h3 class="text-lg font-semibold mt-4 mb-2">📎 Belgeler</h3>
-        <ul>
-          <li v-for="belge in belgeler" :key="belge.id">
-            {{ belge.file_path }} - {{ formatDate(belge.uploaded_at) }}
+      </div>
+
+      <!-- Belgeler -->
+      <div class="kart">
+        <h3 class="kart-baslik">📎 Belgeler</h3>
+        <ul v-if="belgeler.length > 0" class="liste">
+          <li v-for="belge in belgeler" :key="belge.id" class="liste-oge">
+            <a :href="belge.file_path" target="_blank" class="belge-link">
+              📄 {{ belge.file_path.split('/').pop() }}
+            </a>
           </li>
         </ul>
+        <p v-else class="no-data">Belge bulunamadı.</p>
       </div>
-      <div v-if="basvuru.tablo5_pdf_path" class="mt-6">
-  <a :href="getPdfUrl(basvuru.tablo5_pdf_path)" target="_blank" class="pdf-link">
-    📄 Tablo 5 PDF'ini Görüntüle
-  </a>
-</div>
-<div v-else class="mt-6 text-gray-400">
-  Tablo 5 henüz oluşturulmamış.
-</div>
+
+      <!-- Tablo 5 PDF -->
+      <div class="kart">
+        <h3 class="kart-baslik">📝 Tablo 5 PDF</h3>
+        <div v-if="basvuru.tablo5_pdf_path" class="tablo5-link">
+          <a :href="basvuru.tablo5_pdf_path" target="_blank" class="belge-link">
+            📥 Tablo 5 PDF'ini Görüntüle
+          </a>
+        </div>
+        <p v-else class="no-data">Tablo 5 henüz oluşturulmamış.</p>
+      </div>
     </div>
-  </template>
+  </div>
+</template>
+
+
   
   <script>
   import axios from 'axios'
@@ -86,27 +104,76 @@
     }
   }
   </script>
-  
-  
   <style scoped>
   .basvuru-detay {
-    background: #121212;
-    color: white;
-    padding: 40px;
-  }
-  
-  .durum-blok {
-    background: #1f1f1f;
-    padding: 20px;
-    margin-bottom: 30px;
-    border-radius: 12px;
-    text-align: center;
-  }
-  
-  .durum-blok h1 {
-    font-size: 28px;
-    font-weight: bold;
-    color: #00bcd4;
-  }
-  </style>
-  
+  padding: 40px;
+  background-color: #121212;
+  color: white;
+  min-height: 100vh;
+}
+
+.baslik {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  text-align: center;
+  color: #00bcd4;
+}
+
+.yukleniyor {
+  text-align: center;
+  font-size: 18px;
+  color: #aaa;
+}
+
+.kart {
+  background-color: #1e1e1e;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.05);
+}
+
+.kart-baslik {
+  font-size: 22px;
+  color: #00e676;
+  margin-bottom: 15px;
+}
+
+.liste {
+  list-style: none;
+  padding-left: 0;
+}
+
+.liste-oge {
+  margin-bottom: 10px;
+}
+
+.belge-link {
+  color: #00bcd4;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.belge-link:hover {
+  color: #00acc1;
+  text-decoration: underline;
+}
+
+.no-data {
+  color: #888;
+  font-style: italic;
+}
+
+.tablo5-link {
+  margin-top: 10px;
+}
+
+.durum {
+  font-size: 24px;
+  font-weight: bold;
+  color: #00e5ff;
+  text-align: center;
+}
+
+</style>

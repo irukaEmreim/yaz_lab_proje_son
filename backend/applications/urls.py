@@ -6,7 +6,7 @@ from .views import (
     belgeler_by_application, basvuru_detay, profilim, profil_guncelle,
     sifre_guncelle, juri_basvurulari,aday_bilgileri, faaliyet_turleri_by_application,
     juri_degerlendir, basvuru_juri_raporlari,  basvuru_sonuclandir, sonuclanacak_basvurular,
-    tablo5_olustur, 
+    tablo5_olustur, kullanici_listesi
 )
 
 router = DefaultRouter()
@@ -31,6 +31,6 @@ urlpatterns = router.urls + [
     path('sonuclanacak-basvurular/', sonuclanacak_basvurular),
     path('tablo5/<int:application_id>/', tablo5_olustur),
     path('tablo5-olustur/<int:application_id>/', tablo5_olustur),
-
+    path('api/kullanicilar/', kullanici_listesi),
 
 ]

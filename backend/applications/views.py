@@ -54,26 +54,54 @@ def basvuru_yap(request):
         return Response({"error": "Başvuru sırasında bir hata oluştu."}, status=500)
 
 
+from akademik_portal.firebase_config import bucket
+from io import BytesIO
+from users.models import User
+from management.models import FaaliyetPuanlari
+from django.utils.text import slugify
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def belge_yukle(request):
     try:
         app_id = request.data.get("application_id")
         file = request.FILES.get("file")
-        faaliyet_kodu = request.data.get("faaliyet_kodu")  # 🔥 burada yakalıyoruz
+        faaliyet_kodu = request.data.get("faaliyet_kodu")
 
         if not file:
             return Response({"error": "Dosya eksik"}, status=400)
 
         app_instance = Application.objects.get(id=app_id)
+        aday = User.objects.get(id=app_instance.candidate_id)
 
+        # 🔥 Faaliyet adını bulalım
+        try:
+            faaliyet = FaaliyetPuanlari.objects.get(faaliyet_kodu=faaliyet_kodu)
+            faaliyet_adi = faaliyet.faaliyet_adi
+        except FaaliyetPuanlari.DoesNotExist:
+            faaliyet_adi = "Bilinmeyen_Faaliyet"
+
+        # 🔥 Aday klasör adı ve dosya adını oluşturalım
+        aday_klasor_adi = slugify(f"{aday.first_name}_{aday.last_name}").replace('-', '_')
+        dosya_adi = slugify(f"{aday.first_name}_{aday.last_name}_{faaliyet_adi}").replace('-', '_') + ".pdf"
+
+        # 🔥 Tam dosya yolu: "basvuru_belgeleri/Ali_Yilmaz/ali_yilmaz_q1_makale.pdf"
+        firebase_path = f"basvuru_belgeleri/{aday_klasor_adi}/{dosya_adi}"
+
+        # 🔥 Firebase'a yükleme
+        blob = bucket.blob(firebase_path)
+        blob.upload_from_file(file.file, content_type=file.content_type)
+        blob.make_public()
+
+        file_url = blob.public_url  # Public erişim URL'si
+
+        # 🔥 Veritabanına kaydet
         ApplicationDocument.objects.create(
-            application=app_instance,  # instance veriyoruz
-            file_path=file.name,        # dosya ismi
-            description="",             # istersen açıklama buraya yazarsın
+            application=app_instance,
+            file_path=file_url,
+            description="",
             uploaded_at=timezone.now(),
-            faaliyet_kodu=faaliyet_kodu  # 🔥 burada kaydediyoruz
-
+            faaliyet_kodu=faaliyet_kodu
         )
 
         return Response({"message": "Belge kaydedildi"}, status=201)
@@ -81,6 +109,10 @@ def belge_yukle(request):
     except Exception as e:
         print("Belge yükleme hatası:", e)
         return Response({"error": "Belge yüklenemedi"}, status=500)
+
+
+
+
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -109,6 +141,7 @@ def basvurularim(request):
                 "announcement_title": ilan_baslik,
                 "status": basvuru.status,
                 "submitted_at": basvuru.submitted_at,
+                "file_path" : basvuru.tablo5_pdf_path,  # Tablo 5 PDF yolu
             })
 
         return Response(data, status=200)
@@ -285,11 +318,12 @@ def aday_bilgileri(request, app_id):
         aday = User.objects.get(id=application.candidate_id)
 
         data = {
-            "first_name": aday.first_name,
-            "last_name": aday.last_name,
-            "email": aday.email,
-            "tc_kimlik_no": aday.tc_kimlik_no,  # Eğer göstermek istersen
-        }
+                "first_name": aday.first_name,
+                "last_name": aday.last_name,
+                "email": aday.email,
+                "tc_kimlik_no": aday.tc_kimlik_no,  # Eğer göstermek istersen
+                "tablo5_pdf_path": application.tablo5_pdf_path  # 🔥 EKLEDİK
+            }
         return Response(data)
 
     except Exception as e:
@@ -332,32 +366,45 @@ def juri_degerlendir(request):
         user = request.user  # juri kullanıcı
         if user.role != 'juri':
             return Response({"error": "Yetkisiz erişim"}, status=403)
+
         application_id = request.data.get('application_id')
-        evaluation_result = request.data.get('sonuc')  # 'olumlu' veya 'olumsuz'
-        description = request.data.get('degerlendirme_notu')  # 🔥 Açıklama geliyor!
+        evaluation_result = request.data.get('sonuc')
+        description = request.data.get('degerlendirme_notu')
         dosya = request.FILES.get('dosya')
 
         if not application_id or not evaluation_result or not dosya or not description:
             return Response({"error": "Eksik veri gönderildi."}, status=400)
 
-        # Dosyayı kaydet (örnek: /uploads/jury_reports klasörüne)
-        import os
-        from django.conf import settings
-
-        save_path = os.path.join(settings.MEDIA_ROOT, 'jury_reports', dosya.name)
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-
-        with open(save_path, 'wb+') as destination:
-            for chunk in dosya.chunks():
-                destination.write(chunk)
-
+        from applications.models import Application
+        from users.models import User
         from .models import JuryReport
+        from django.utils.text import slugify
+
+        app_instance = Application.objects.get(id=application_id)
+        aday = User.objects.get(id=app_instance.candidate_id)
+
+        # 🔥 Yeni: juri bilgileri
+        juri = user  # zaten giriş yapan jüri kullanıcısı
+
+        # 🔥 Dosya adını juri ve aday isimleriyle oluştur
+        dosya_adi = slugify(f"{juri.first_name}_{juri.last_name}_degerlendirme_{aday.first_name}_{aday.last_name}") + ".pdf"
+
+        # 🔥 Klasör yapısı
+        aday_klasor_adi = slugify(f"{aday.first_name}_{aday.last_name}").replace('-', '_')
+        firebase_path = f"juri_raporlari/{aday_klasor_adi}/{dosya_adi}"
+
+        blob = bucket.blob(firebase_path)
+        blob.upload_from_file(dosya.file, content_type=dosya.content_type)
+        blob.make_public()
+
+        file_url = blob.public_url
+
         JuryReport.objects.create(
             application_id=application_id,
             jury_member_id=user.id,
             evaluation_result=evaluation_result,
-            report_file_path=f'jury_reports/{dosya.name}',  # Göreli dosya yolu
-            description=description,  # 🔥 Açıklamayı da kaydediyoruz
+            report_file_path=file_url,
+            description=description,
             submitted_at=timezone.now(),
         )
 
@@ -366,6 +413,7 @@ def juri_degerlendir(request):
     except Exception as e:
         print("Jüri değerlendirme hatası:", e)
         return Response({"error": "Bir hata oluştu."}, status=500)
+
 
 
 @api_view(['GET'])
@@ -676,19 +724,25 @@ def tablo5_olustur(request, application_id):
 
         html = HTML(string=html_string)
         pdf = html.write_pdf()
+        from akademik_portal.firebase_config import bucket
+        from io import BytesIO
+        
+        pdf_buffer = BytesIO()
+        pdf_buffer.write(pdf)
+        pdf_buffer.seek(0)  # Buffer'ın başına dön
 
-        pdf_folder = os.path.join(settings.MEDIA_ROOT, 'tablo5')
-        os.makedirs(pdf_folder, exist_ok=True)
+        # Firebase'a yükleme
+        blob = bucket.blob(f"tablo5/tablo5_{application_id}.pdf")
+        blob.upload_from_file(pdf_buffer, content_type="application/pdf")
+        blob.make_public()
 
-        pdf_fileename = f"tablo5_{application_id}.pdf"
-        pdf_path = os.path.join(pdf_folder, pdf_fileename)
-
-        with open(pdf_path, 'wb') as f:
-            f.write(pdf)
-        app.tablo5_pdf_path = f'tablo5/{pdf_fileename}'
+        # Dosya URL'sini al ve kaydet
+        app.tablo5_pdf_path = blob.public_url
         app.save()
 
-        return Response ({"message": "Tablo 5 başarıyla oluşturuldu ve kaydedildi."}) 
+
+        return Response ({"message": "Tablo 5 başarıyla oluşturuldu ve Firebase'e kaydedildi."}) 
+        
         #response = HttpResponse(pdf, content_type='application/pdf')
         #response['Content-Disposition'] = f'inline; filename="tablo5_{application_id}.pdf"'
         #return response
@@ -763,3 +817,25 @@ def tablo5_olustur(request, application_id):
         print("Tablo 5 oluşturulamadı:", e)
         return Response({"error": "Tablo 5 oluşturulamadı."}, status=500)
 """
+
+from users.models import User
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def kullanici_listesi(request):
+    if not request.user.is_superuser and request.user.role != 'admin':
+        return Response({"error": "Yetkisiz erişim"}, status=403)
+    
+    users = User.objects.all()
+    data = []
+    for user in users:
+        data.append({
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "role": user.role,
+            "is_active": user.is_active,
+            "created_at": user.created_at,
+        })
+    return Response(data)

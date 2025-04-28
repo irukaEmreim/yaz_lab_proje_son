@@ -18,7 +18,7 @@
   
           <ul v-if="belgeler.length > 0">
             <li v-for="belge in belgeler" :key="belge.id" class="mb-2">
-              <a :href="getFileUrl(belge.file_path)" target="_blank" class="belge-link">
+              <a :href="belge.file_path" target="_blank" class="belge-link">
                 📎 {{ belge.file_path }}
               </a>
               <span class="faaliyet-adi">({{ getFaaliyetAdi(belge.faaliyet_kodu) }})</span>
@@ -27,6 +27,18 @@
           <p v-else class="text-gray-400">Belge eklenmemiş.</p>
         </div>
   
+        <div v-if="aday.tablo5_pdf_path" class="mt-6">
+          <a :href="aday.tablo5_pdf_path" target="_blank" download class="bg-cyan-500 hover:bg-cyan-400 text-white font-bold py-2 px-4 rounded mt-4 inline-block">
+  📄 Tablo 5 PDF'ini İndir
+</a>
+        </div>
+        <div v-else class="mt-6 text-gray-400">
+            Tablo 5 henüz oluşturulmamış.
+        </div>
+
+        
+
+
         <!-- Jüri Değerlendirme Formu -->
         <div class="degerlendirme-form mt-16 p-6 rounded-lg border border-green-400 bg-[#1a1a1a]">
           <h3 class="text-2xl font-bold text-green-300 mb-6">🖋️ Jüri Değerlendirmesi</h3>

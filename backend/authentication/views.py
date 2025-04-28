@@ -32,7 +32,7 @@ def register(request):
             password=make_password(data['password']),
             role='aday',
             is_active=True,
-            crerated_at =timezone.now()
+            created_at =timezone.now()
         )
         return Response({"message": "Kayıt başarılı!"})
     except Exception as e:

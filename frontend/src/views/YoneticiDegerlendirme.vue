@@ -10,7 +10,7 @@
           <h3 class="text-xl font-semibold text-cyan-300 mb-2">{{ rapor.jury_member_name }}</h3>
           <p><strong>Sonuç:</strong> {{ rapor.evaluation_result === 'olumlu' ? '✅ Olumlu' : '❌ Olumsuz' }}</p>
           <p><strong>Açıklama:</strong> {{ rapor.description }}</p>
-          <a :href="getFileUrl(rapor.report_file_path)" target="_blank" class="file-link">📎 Raporu Görüntüle</a>
+          <a :href="rapor.report_file_path" target="_blank" class="file-link">📎 Raporu Görüntüle</a>
           <p class="text-sm text-gray-400 mt-2">Yükleme Tarihi: {{ formatDate(rapor.submitted_at) }}</p>
         </div>
   

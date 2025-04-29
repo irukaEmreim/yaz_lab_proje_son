@@ -827,6 +827,8 @@ def kullanici_listesi(request):
         return Response({"error": "Yetkisiz erişim"}, status=403)
     
     users = User.objects.all()
+    print("Tüm kullanıcılar:", users)  # Debugging için ekledik 
+    
     data = []
     for user in users:
         data.append({

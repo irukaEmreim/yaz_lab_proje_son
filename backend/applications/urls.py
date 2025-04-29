@@ -31,6 +31,6 @@ urlpatterns = router.urls + [
     path('sonuclanacak-basvurular/', sonuclanacak_basvurular),
     path('tablo5/<int:application_id>/', tablo5_olustur),
     path('tablo5-olustur/<int:application_id>/', tablo5_olustur),
-    path('api/kullanicilar/', kullanici_listesi),
+    path('kullanicilar/', kullanici_listesi),
 
 ]

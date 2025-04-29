@@ -107,7 +107,14 @@ const routes = [
     name: 'Tablo5Olustur',
     component: () => import('@/views/Tablo5Olustur.vue'),
     meta: { requiresAuth: true, role: 'aday' }
+  },
+  {
+    path: '/admin/kullanicilar',
+    name: 'AdminKullanicilar',
+    component: () => import('@/views/AdminKullanicilar.vue'),
+    meta: { requiresAuth: true, role: 'admin' }
   }
+  
   
   
 ]

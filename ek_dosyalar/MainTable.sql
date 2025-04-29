@@ -97,7 +97,7 @@ CREATE TABLE jury_reports (
     evaluation_result VARCHAR(10) CHECK (evaluation_result IN ('olumlu', 'olumsuz')),
     report_file_path TEXT,
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    jury_reports ADD COLUMN description Text
+    description Text
 );
 
 

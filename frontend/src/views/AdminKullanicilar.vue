@@ -72,7 +72,6 @@
   
         this.users = res.data
   
-        // 🔥 Kullanıcıları rollerine göre ayır
         this.adminler = this.users.filter(user => user.role === 'admin')
         this.yoneticiler = this.users.filter(user => user.role === 'yonetici')
         this.juriler = this.users.filter(user => user.role === 'juri')

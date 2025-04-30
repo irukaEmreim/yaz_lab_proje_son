@@ -2,13 +2,12 @@
   <div class="yonetici-panel">
     <h2>👨‍💼 Yönetici Paneli</h2>
 
-    <!-- Tüm yönlendirme butonları aynı satırda -->
     <div class="menu-buttons">
       <button @click="$router.push('/yonetici/juri-ekle')">👤 Yeni Jüri Oluştur</button>
       <button @click="$router.push('/yonetici/ilanlar')">📄 İlanları Görüntüle</button>
       <button @click="$router.push('/yonetici/kadro-kriterleri')">📋 Kadro Kriterlerini Düzenle</button>
       <button @click="$router.push('/yonetici/puan-kriterleri')">📊 Puan Kriterlerini Düzenle</button>
-      <button @click="$router.push('/yonetici/yonetici-degerlendirilecek-ilanlar')">✅ Başvuruları Sonuçlandır</button> <!-- 🔥 BURAYI EKLEDİK -->
+      <button @click="$router.push('/yonetici/yonetici-degerlendirilecek-ilanlar')">✅ Başvuruları Sonuçlandır</button> 
     </div>
 
     <router-view />

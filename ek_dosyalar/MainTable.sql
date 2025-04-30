@@ -4,11 +4,11 @@ CREATE TABLE bolumler (
     ad VARCHAR(100) NOT NULL UNIQUE
 );
 
-INSERT INTO bolumler (ad) VALUES
-('Sağlık/Fen/Ziraat/Matematik/Mühendislik/Ziraat/Orman ve Su Ürünleri'),
-('Eğitim/Sosyal/Beşeri'),
-('Hukuk/İlahiyat'),
-('Güzel Sanatlar');
+INSERT INTO bolumler (id, ad) VALUES
+(1,'Sağlık/Fen/Ziraat/Matematik/Mühendislik/Ziraat/Orman ve Su Ürünleri'),
+(2,'Eğitim/Sosyal/Beşeri'),
+(3,'Hukuk/İlahiyat'),
+(4,'Güzel Sanatlar');
 
 -- ===============================
 -- 1. Kullanıcılar Tablosu

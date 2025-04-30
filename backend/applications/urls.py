@@ -22,7 +22,7 @@ urlpatterns = router.urls + [
     path('profilim/', profilim),
     path('profilim/guncelle/', profil_guncelle),
     path('profilim/sifre/', sifre_guncelle),
-    path('juri/basvurularim/', juri_basvurulari),  # 👈 İŞTE BURASI!
+    path('juri/basvurularim/', juri_basvurulari),
     path('aday-bilgileri/<int:app_id>/', aday_bilgileri),
     path('faaliyet-turleri/<int:app_id>/', faaliyet_turleri_by_application),
     path('juri/degerlendir/', juri_degerlendir),

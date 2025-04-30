@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from .models import Application, ApplicationActivity, ApplicationDocument
 from django.utils import timezone
-from announcements.models import AcademicAnnouncement  # İlan modelini import et
+from announcements.models import AcademicAnnouncement  
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):
@@ -27,7 +27,7 @@ def basvuru_yap(request):
     try:
         print("Gelen veri:", data)
 
-        # Başvuru oluştur
+        # Başvuru olsutrma
         app = Application.objects.create(
             candidate_id=user.id,
             announcement_id=data['announcement_id'],
@@ -35,10 +35,9 @@ def basvuru_yap(request):
             submitted_at=timezone.now()
         )
 
-        # Faaliyetleri kaydet
         for faaliyet_kodu, entry in data.get('form', {}).items():
             ApplicationActivity.objects.create(
-                application=app,  # ✅ dikkat! burada application_id yazıyoruz
+                application=app, 
                 faaliyet_kodu=faaliyet_kodu,
                 adet=entry['adet'],
                 created_at=timezone.now()
@@ -74,28 +73,24 @@ def belge_yukle(request):
         app_instance = Application.objects.get(id=app_id)
         aday = User.objects.get(id=app_instance.candidate_id)
 
-        # 🔥 Faaliyet adını bulalım
         try:
             faaliyet = FaaliyetPuanlari.objects.get(faaliyet_kodu=faaliyet_kodu)
             faaliyet_adi = faaliyet.faaliyet_adi
         except FaaliyetPuanlari.DoesNotExist:
             faaliyet_adi = "Bilinmeyen_Faaliyet"
 
-        # 🔥 Aday klasör adı ve dosya adını oluşturalım
         aday_klasor_adi = slugify(f"{aday.first_name}_{aday.last_name}").replace('-', '_')
         dosya_adi = slugify(f"{aday.first_name}_{aday.last_name}_{faaliyet_adi}").replace('-', '_') + ".pdf"
 
-        # 🔥 Tam dosya yolu: "basvuru_belgeleri/Ali_Yilmaz/ali_yilmaz_q1_makale.pdf"
         firebase_path = f"basvuru_belgeleri/{aday_klasor_adi}/{dosya_adi}"
 
-        # 🔥 Firebase'a yükleme
+        # Firebase'e yükleme
         blob = bucket.blob(firebase_path)
         blob.upload_from_file(file.file, content_type=file.content_type)
         blob.make_public()
 
-        file_url = blob.public_url  # Public erişim URL'si
+        file_url = blob.public_url 
 
-        # 🔥 Veritabanına kaydet
         ApplicationDocument.objects.create(
             application=app_instance,
             file_path=file_url,
@@ -120,7 +115,6 @@ def basvurularim(request):
     user = request.user
 
     try:
-        # Sadece aday rolündeki kullanıcılar erişebilsin
         if user.role != 'aday':
             return Response({"error": "Yetkisiz erişim."}, status=403)
 
@@ -133,7 +127,7 @@ def basvurularim(request):
                 ilan = AcademicAnnouncement.objects.get(id=basvuru.announcement_id)
                 ilan_baslik = ilan.title
             except AcademicAnnouncement.DoesNotExist:
-                pass  # Eğer ilan bulunamazsa, zaten "Başlık bulunamadı" kalacak
+                pass  
 
             data.append({
                 "id": basvuru.id,
@@ -141,7 +135,7 @@ def basvurularim(request):
                 "announcement_title": ilan_baslik,
                 "status": basvuru.status,
                 "submitted_at": basvuru.submitted_at,
-                "file_path" : basvuru.tablo5_pdf_path,  # Tablo 5 PDF yolu
+                "file_path" : basvuru.tablo5_pdf_path,  
             })
 
         return Response(data, status=200)
@@ -177,7 +171,7 @@ def belgeler_by_application(request, app_id):
             "file_path": b.file_path,
             "description": b.description,
             "uploaded_at": b.uploaded_at,
-            "faaliyet_kodu": b.faaliyet_kodu  # 🔥 FAALİYET KODUNU DA EKLİYORUZ
+            "faaliyet_kodu": b.faaliyet_kodu  
 
         } for b in belgeler]
         return Response(data)
@@ -199,7 +193,7 @@ def basvuru_detay(request, app_id):
             "announcement_id": basvuru.announcement_id,
             "status": basvuru.status,
             "submitted_at": basvuru.submitted_at,
-            "tablo5_pdf_path": app.tablo5_pdf_path,  # Tablo 5 PDF yolu
+            "tablo5_pdf_path": app.tablo5_pdf_path,  
         }
         return Response(data)
     except Application.DoesNotExist:
@@ -261,15 +255,12 @@ def juri_basvurulari(request):
     from applications.models import Application
     from announcements.models import AcademicAnnouncement, Bolum
 
-    # Jürinin atandığı ilanlar
     assigned_announcements = Jury.objects.filter(jury_member_id=user.id).values_list('announcement_id', flat=True)
 
-    # Bu jürinin değerlendirdiği başvurular
     degerlendirilen_app_ids = JuryReport.objects.filter(
         jury_member_id=user.id
     ).values_list('application_id', flat=True)
 
-    # Atandığı fakat henüz değerlendirmediği başvurular
     basvurular = Application.objects.filter(
         announcement_id__in=assigned_announcements
     ).exclude(id__in=degerlendirilen_app_ids)
@@ -295,12 +286,12 @@ def juri_basvurulari(request):
             bolum_adi = "Bölüm bilgisi yok"
 
         data.append({
-            "id": basvuru.id,  # Başvuru Numarası
-            "announcement_title": ilan_baslik,  # İlan Başlığı
-            "end_date": son_basvuru_tarihi,  # Son Başvuru Tarihi
-            "department_name": bolum_adi,  # Bölüm Adı
-            "status": basvuru.status,  # Başvuru Durumu
-            "submitted_at": basvuru.submitted_at,  # Başvuru Tarihi
+            "id": basvuru.id,  
+            "announcement_title": ilan_baslik, 
+            "end_date": son_basvuru_tarihi,  
+            "department_name": bolum_adi,  
+            "status": basvuru.status, 
+            "submitted_at": basvuru.submitted_at, 
         })
 
     return Response(data)
@@ -321,8 +312,8 @@ def aday_bilgileri(request, app_id):
                 "first_name": aday.first_name,
                 "last_name": aday.last_name,
                 "email": aday.email,
-                "tc_kimlik_no": aday.tc_kimlik_no,  # Eğer göstermek istersen
-                "tablo5_pdf_path": application.tablo5_pdf_path  # 🔥 EKLEDİK
+                "tc_kimlik_no": aday.tc_kimlik_no, 
+                "tablo5_pdf_path": application.tablo5_pdf_path  
             }
         return Response(data)
 
@@ -336,7 +327,7 @@ def aday_bilgileri(request, app_id):
 def faaliyet_turleri_by_application(request, app_id):
     try:
         from applications.models import ApplicationActivity
-        from management.models import FaaliyetPuanlari  # veya faaliyet_puanlari tablosunu temsil eden model
+        from management.models import FaaliyetPuanlari  
         
         faaliyetler = ApplicationActivity.objects.filter(application_id=app_id)
 
@@ -363,7 +354,7 @@ def faaliyet_turleri_by_application(request, app_id):
 @permission_classes([permissions.IsAuthenticated])
 def juri_degerlendir(request):
     try:
-        user = request.user  # juri kullanıcı
+        user = request.user  
         if user.role != 'juri':
             return Response({"error": "Yetkisiz erişim"}, status=403)
 
@@ -383,13 +374,10 @@ def juri_degerlendir(request):
         app_instance = Application.objects.get(id=application_id)
         aday = User.objects.get(id=app_instance.candidate_id)
 
-        # 🔥 Yeni: juri bilgileri
-        juri = user  # zaten giriş yapan jüri kullanıcısı
+        juri = user  
 
-        # 🔥 Dosya adını juri ve aday isimleriyle oluştur
         dosya_adi = slugify(f"{juri.first_name}_{juri.last_name}_degerlendirme_{aday.first_name}_{aday.last_name}") + ".pdf"
 
-        # 🔥 Klasör yapısı
         aday_klasor_adi = slugify(f"{aday.first_name}_{aday.last_name}").replace('-', '_')
         firebase_path = f"juri_raporlari/{aday_klasor_adi}/{dosya_adi}"
 
@@ -429,18 +417,16 @@ def sonuclanacak_basvurular(request):
     from .models import JuryReport
     from announcements.models import AcademicAnnouncement, Bolum
 
-    applications = Application.objects.filter(status='Beklemede')  # 🔥 Sadece bekleyen başvurular
+    applications = Application.objects.filter(status='Beklemede')  
 
     sonuclanacaklar = []
 
     for app in applications:
-        # 1. Bu başvuruya herhangi bir jüri değerlendirmesi yapılmış mı?
         degerlendirme_var_mi = JuryReport.objects.filter(application_id=app.id).exists()
 
         if not degerlendirme_var_mi:
-            continue  # Henüz hiçbir jüri değerlendirme yapmadıysa geç
+            continue  
 
-        # 2. Başvuru verilerini ekle
         try:
             ilan = AcademicAnnouncement.objects.get(id=app.announcement_id)
             ilan_baslik = ilan.title
@@ -494,10 +480,10 @@ def basvuru_juri_raporlari(request, application_id):
 
             data.append({
                 "jury_member_name": juri_adi,
-                "evaluation_result": rapor.evaluation_result,  # olumlu/olumsuz
-                "report_file_path": rapor.report_file_path,    # yüklenen dosya
-                "description": rapor.description,              # yazılan açıklama
-                "submitted_at": rapor.submitted_at,             # gönderim tarihi
+                "evaluation_result": rapor.evaluation_result,  
+                "report_file_path": rapor.report_file_path,    
+                "description": rapor.description,              
+                "submitted_at": rapor.submitted_at,            
             })
 
         return Response(data)
@@ -551,7 +537,7 @@ from management.models import FaaliyetPuanlari
 from applications.models import ApplicationDocument
 from users.models import User
 from management.models import Bolum
-from django.utils.timezone import now  # En üste ekli olsun
+from django.utils.timezone import now  
 import os
 from django.conf import settings
 
@@ -574,7 +560,6 @@ def tablo5_olustur(request, application_id):
 
         belgeler = ApplicationDocument.objects.filter(application=app)
 
-        # 🔥 A. Makaleler
         faaliyetler_A = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='A')
         faaliyet_puanlama_A = []
         toplam_puan_A = 0
@@ -584,7 +569,6 @@ def tablo5_olustur(request, application_id):
             toplam_puan_A += toplam
             faaliyet_puanlama_A.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
 
-        # 🔥 B. Bilimsel Toplantı Faaliyetleri
         faaliyetler_B = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='B')
         faaliyet_puanlama_B = []
         toplam_puan_B = 0
@@ -594,7 +578,6 @@ def tablo5_olustur(request, application_id):
             toplam_puan_B += toplam
             faaliyet_puanlama_B.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
 
-        # 🔥 C. Kitaplar
         faaliyetler_C = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='C')
         faaliyet_puanlama_C = []
         toplam_puan_C = 0
@@ -604,7 +587,6 @@ def tablo5_olustur(request, application_id):
             toplam_puan_C += toplam
             faaliyet_puanlama_C.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
 
-        # 🔥 D. Atıflar
         faaliyetler_D = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='D')
         faaliyet_puanlama_D = []
         toplam_puan_D = 0
@@ -614,7 +596,6 @@ def tablo5_olustur(request, application_id):
             toplam_puan_D += toplam
             faaliyet_puanlama_D.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
 
-        # 🔥 E. Eğitim Faaliyetleri
         faaliyetler_E = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='E')
         faaliyet_puanlama_E = []
         toplam_puan_E = 0
@@ -624,7 +605,6 @@ def tablo5_olustur(request, application_id):
             toplam_puan_E += toplam
             faaliyet_puanlama_E.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
 
-        # 🔥 F. Danışmanlık Faaliyetleri (YENİ 🔥)
         faaliyetler_F = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='F')
         faaliyet_puanlama_F = []
         toplam_puan_F = 0
@@ -634,7 +614,6 @@ def tablo5_olustur(request, application_id):
             toplam_puan_F += toplam
             faaliyet_puanlama_F.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
         
-        # 🔥 G. Patent Faaliyetleri
         faaliyetler_G = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='G')
         faaliyet_puanlama_G = []
         toplam_puan_G = 0
@@ -644,7 +623,6 @@ def tablo5_olustur(request, application_id):
             toplam_puan_G += toplam
             faaliyet_puanlama_G.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
         
-        # 🔥 H. Araştırma Faaliyetleri
         faaliyetler_H = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='H')
         faaliyet_puanlama_H = []
         toplam_puan_H = 0
@@ -654,7 +632,6 @@ def tablo5_olustur(request, application_id):
             toplam_puan_H += toplam
             faaliyet_puanlama_H.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
 
-        # 🔥 I. Editörlük Faaliyetleri
         faaliyetler_I = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='I')
         faaliyet_puanlama_I = []
         toplam_puan_I = 0
@@ -664,7 +641,6 @@ def tablo5_olustur(request, application_id):
             toplam_puan_I += toplam
             faaliyet_puanlama_I.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
 
-        # 🔥 J. Ödüller
         faaliyetler_J = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='J')
         faaliyet_puanlama_J = []
         toplam_puan_J = 0
@@ -674,7 +650,6 @@ def tablo5_olustur(request, application_id):
             toplam_puan_J += toplam
             faaliyet_puanlama_J.append({'aciklama': faaliyet.aciklama, 'puan': toplam})
 
-# 🔥 K. Yöneticilik
         faaliyetler_K = FaaliyetPuanlari.objects.filter(faaliyet_kodu__startswith='K')
         faaliyet_puanlama_K = []
         toplam_puan_K = 0
@@ -707,19 +682,19 @@ def tablo5_olustur(request, application_id):
             'toplam_puan_D': toplam_puan_D,
             'faaliyet_puanlama_E': faaliyet_puanlama_E,
             'toplam_puan_E': toplam_puan_E,
-            'faaliyet_puanlama_F': faaliyet_puanlama_F,  # 📢 F'yi ekliyoruz
+            'faaliyet_puanlama_F': faaliyet_puanlama_F,  
             'toplam_puan_F': toplam_puan_F,
             'faaliyet_puanlama_G' : faaliyet_puanlama_G,
             'toplam_puan_G' : toplam_puan_G,
-            'faaliyet_puanlama_H': faaliyet_puanlama_H,  # 📢 H verilerini de ekliyoruz
+            'faaliyet_puanlama_H': faaliyet_puanlama_H,  
             'toplam_puan_H': toplam_puan_H,
-            'faaliyet_puanlama_I': faaliyet_puanlama_I,  # 📢 burayı da ekliyoruz
+            'faaliyet_puanlama_I': faaliyet_puanlama_I,  
             'toplam_puan_I': toplam_puan_I,
-            'faaliyet_puanlama_J': faaliyet_puanlama_J,  # 📢 Burası
-            'toplam_puan_J': toplam_puan_J,              # 📢 Burası
-            'faaliyet_puanlama_K': faaliyet_puanlama_K,  # 📢 Burası
-            'toplam_puan_K': toplam_puan_K,              # 📢 Burası
-            'genel_toplam_puan': genel_toplam_puan,  # 📢 Burası yeni
+            'faaliyet_puanlama_J': faaliyet_puanlama_J,  
+            'toplam_puan_J': toplam_puan_J,              
+            'faaliyet_puanlama_K': faaliyet_puanlama_K, 
+            'toplam_puan_K': toplam_puan_K,             
+            'genel_toplam_puan': genel_toplam_puan,  
         })
 
         html = HTML(string=html_string)
@@ -729,23 +704,19 @@ def tablo5_olustur(request, application_id):
         
         pdf_buffer = BytesIO()
         pdf_buffer.write(pdf)
-        pdf_buffer.seek(0)  # Buffer'ın başına dön
+        pdf_buffer.seek(0)  
 
-        # Firebase'a yükleme
+
         blob = bucket.blob(f"tablo5/tablo5_{application_id}.pdf")
         blob.upload_from_file(pdf_buffer, content_type="application/pdf")
         blob.make_public()
 
-        # Dosya URL'sini al ve kaydet
         app.tablo5_pdf_path = blob.public_url
         app.save()
 
 
         return Response ({"message": "Tablo 5 başarıyla oluşturuldu ve Firebase'e kaydedildi."}) 
         
-        #response = HttpResponse(pdf, content_type='application/pdf')
-        #response['Content-Disposition'] = f'inline; filename="tablo5_{application_id}.pdf"'
-        #return response
 
     except Exception as e:
         print("Tablo 5 oluşturulamadı:", e)
@@ -827,7 +798,7 @@ def kullanici_listesi(request):
         return Response({"error": "Yetkisiz erişim"}, status=403)
     
     users = User.objects.all()
-    print("Tüm kullanıcılar:", users)  # Debugging için ekledik 
+    print("Tüm kullanıcılar:", users)  
     
     data = []
     for user in users:

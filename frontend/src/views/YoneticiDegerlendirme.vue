@@ -84,7 +84,7 @@
           })
   
           alert("Başvuru durumu başarıyla güncellendi!")
-          this.$router.push('/yonetici')  // Yönetici anasayfasına dön
+          this.$router.push('/yonetici')  
         } catch (err) {
           console.error("Durum güncellenemedi:", err)
           alert("Başvuru durumunu kaydederken bir hata oluştu.")

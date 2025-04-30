@@ -7,8 +7,8 @@ import ApplicationList from '../views/ApplicationList.vue'
 import YoneticiDashboard from '../views/YoneticiDashboard.vue'
 import YoneticiJuriEkle from '../views/YoneticiJuriEkle.vue'
 import YoneticiIlanlar from '../views/YoneticiIlanlar.vue'
-import AdayDashboard from '../views/AdayDashboard.vue' // ✅ eklendi
-import BasvuruForm from '../views/BasvuruForm.vue'  // En üste ekle
+import AdayDashboard from '../views/AdayDashboard.vue' 
+import BasvuruForm from '../views/BasvuruForm.vue' 
 
 const routes = [
   { path: '/', name: 'Login', component: LoginView },
@@ -17,7 +17,7 @@ const routes = [
     path: '/admin',
     name: 'AdminDashboard',
     component: AdminDashboard,
-    meta: { requiresAuth: true, role: 'admin' }, // ✅ eklendi
+    meta: { requiresAuth: true, role: 'admin' }, 
     children: [
       { path: 'announcements', component: AnnouncementList },
       { path: 'announcements/new', component: AnnouncementNew },
@@ -29,7 +29,7 @@ const routes = [
     path: '/yonetici',
     name: 'YoneticiDashboard',
     component: YoneticiDashboard,
-    meta: { requiresAuth: true, role: 'yonetici' }, // ✅ eklendi
+    meta: { requiresAuth: true, role: 'yonetici' }, 
     children: [
       { path: 'juri-ekle', component: YoneticiJuriEkle },
       { path: 'ilanlar', component: YoneticiIlanlar }
@@ -38,17 +38,17 @@ const routes = [
   {
     path: '/yonetici/kadro-kriterleri',
     component: () => import('@/views/YoneticiKadroKriterleri.vue'),
-    meta: { requiresAuth: true, role: 'yonetici' } // ✅ eklendi
+    meta: { requiresAuth: true, role: 'yonetici' } 
   },
   {
     path: '/yonetici/puan-kriterleri',
     component: () => import('@/views/YoneticiPuanKriterleri.vue'),
-    meta: { requiresAuth: true, role: 'yonetici' } // ✅ eklendi
+    meta: { requiresAuth: true, role: 'yonetici' } 
   },
   {
     path: '/aday',
     component: AdayDashboard,
-    meta: { requiresAuth: true, role: 'aday' } // ✅ zaten vardı
+    meta: { requiresAuth: true, role: 'aday' } 
   },
   {
     path: '/aday/ilan/:id/detay',
@@ -93,7 +93,7 @@ const routes = [
   },
   {
     path: '/yonetici/yonetici-degerlendirilecek-ilanlar',
-    component: () => import('@/views/YoneticiDegerlendirilecekIlanlariListeleme.vue'),  // 🔥 Dosya adını buna göre ayarla
+    component: () => import('@/views/YoneticiDegerlendirilecekIlanlariListeleme.vue'),  
     meta: { requiresAuth: true, role: 'yonetici' }
   },
   {

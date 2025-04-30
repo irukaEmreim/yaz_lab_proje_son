@@ -11,10 +11,9 @@ from .serializers import JurySerializer
 
 from users.models import User
 from django.utils import timezone
-from .models import KadroKriterleri, PuanKriterleri, FaaliyetPuanlari, Bolum  # ✅ model burada
-from .serializers import KadroKriterSerializer, PuanKriterSerializer  # ✅ serializer burada
+from .models import KadroKriterleri, PuanKriterleri, FaaliyetPuanlari, Bolum 
+from .serializers import KadroKriterSerializer, PuanKriterSerializer  
 
-# Yöneticinin kendisine atanmış başvuruları
 class AssignedApplicationViewSet(viewsets.ModelViewSet):
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -22,7 +21,6 @@ class AssignedApplicationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Application.objects.filter(assigned_to=self.request.user.id)
 
-# Bir ilana atanmış jürileri getir
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_juries(request, announcement_id):

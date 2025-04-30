@@ -14,7 +14,7 @@ class AcademicAnnouncementViewSet(viewsets.ModelViewSet):
     queryset = AcademicAnnouncement.objects.all()
     serializer_class = AcademicAnnouncementSerializer
 
-    # Sadece giriş yapmış kullanıcılar erişebilir
+    # Sadece giriş yapanlar
     permission_classes = [permissions.IsAuthenticated]
 
 @api_view(['GET'])

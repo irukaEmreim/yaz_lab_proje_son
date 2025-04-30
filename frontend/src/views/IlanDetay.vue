@@ -72,11 +72,6 @@ export default {
 
     this.toplamAsgariPuan = toplamSatiri?.asgari_puan ?? 0
 
-    // Kontrol için konsola basalım
-    console.log("İlan tipi:", this.ilan.position_type)
-    console.log("Eşleşen unvan:", eslesenUnvan)
-    console.log("Toplam satırı:", toplamSatiri)
-    console.log("Toplam asgari puan:", this.toplamAsgariPuan)
   }
 }
 </script>

@@ -56,7 +56,7 @@ export default {
       announcements: [],
       applications: [],
       form: {},
-      activeEditId: null // 👈 sadece 1 tanım olacak
+      activeEditId: null 
     }
   },
   async created() {

@@ -94,7 +94,6 @@ export default {
       const token = localStorage.getItem('token');
   const ilanId = this.$route.params.id;
 
-  // 1️⃣ Gönderilecek form objesini düz formatta hazırlıyoruz
   const form = {};
   for (const kategori in this.secimler) {
     for (const entry of this.secimler[kategori]) {
@@ -108,7 +107,6 @@ export default {
   }
 
   try {
-    // 2️⃣ Başvuru verisini gönder
     const payload = {
       announcement_id: ilanId,
       form: form
@@ -120,14 +118,13 @@ export default {
 
     const applicationId = appRes.data.application_id;
 
-    // 3️⃣ Belgeleri yükle
     for (const kod in form) {
       const belgeler = form[kod].belgeler || [];
       for (const belge of belgeler) {
         const formData = new FormData();
         formData.append("application_id", applicationId);
         formData.append("file", belge);
-        formData.append("faaliyet_kodu", kod);  // Başvurduğu faaliyet kodunu da gönderiyoruz
+        formData.append("faaliyet_kodu", kod);  
 
         await axios.post("http://localhost:8000/api/belge-yukle/", formData, {
           headers: {

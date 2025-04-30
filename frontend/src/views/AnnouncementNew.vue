@@ -53,7 +53,7 @@ export default {
         end_date: "",
         bolum_id: ""
       },
-      bolumler: []  // 💥 Eksikti, eklendi
+      bolumler: []  
     }
   },
   mounted() {

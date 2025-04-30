@@ -18,8 +18,8 @@ class Application(models.Model):
 class ApplicationActivity(models.Model):
     id = models.AutoField(primary_key=True)
     application = models.ForeignKey('Application', db_column='application_id', on_delete=models.CASCADE)
-    faaliyet_kodu = models.CharField(max_length=10)   # ✅ bunu ekle
-    adet = models.IntegerField()                      # ✅ bunu da ekle
+    faaliyet_kodu = models.CharField(max_length=10) 
+    adet = models.IntegerField()                      
     created_at = models.DateTimeField()
 
     class Meta:
@@ -35,7 +35,7 @@ class ApplicationDocument(models.Model):
     file_path = models.TextField()
     description = models.TextField()
     uploaded_at = models.DateTimeField()
-    faaliyet_kodu = models.CharField(max_length=10, null=True, blank=True)  # 🔥 yeni eklenen alan
+    faaliyet_kodu = models.CharField(max_length=10, null=True, blank=True) 
 
     class Meta:
         managed = False
@@ -59,10 +59,10 @@ class JuryReport(models.Model):
     id = models.AutoField(primary_key=True)
     application = models.ForeignKey(Application, on_delete=models.CASCADE, db_column='application_id')
     jury_member = models.ForeignKey(User, on_delete=models.CASCADE, db_column='jury_member_id')
-    evaluation_result = models.CharField(max_length=10)  # 'olumlu' veya 'olumsuz'
+    evaluation_result = models.CharField(max_length=10)  
     report_file_path = models.TextField()
     submitted_at = models.DateTimeField(auto_now_add=True)
-    description = models.TextField(null=True, blank=True)  # Jüri üyesinin eklemek istediği açıklama
+    description = models.TextField(null=True, blank=True)
     class Meta:
-        managed = False  # Çünkü biz kendi SQL ile tablo oluşturduk
+        managed = False
         db_table = 'jury_reports'

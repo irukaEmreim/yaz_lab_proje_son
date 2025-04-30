@@ -48,7 +48,7 @@ if (!token) {
         .filter(app => app.announcement_id === ilan.id)
         .map(app => ({
           id: app.id,
-          candidate_tc: app.candidate_tc, // backend'den geliyor olmalı
+          candidate_tc: app.candidate_tc, 
           status: app.status
         }))
     }))

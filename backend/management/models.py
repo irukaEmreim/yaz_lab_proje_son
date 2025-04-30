@@ -69,7 +69,7 @@ class ApplicationDocument(models.Model):
     file_path = models.TextField()
     description = models.TextField()
     uploaded_at = models.DateTimeField()
-    faaliyet_kodu = models.CharField(max_length=10, null=True, blank=True)  # 🔥 yeni eklenen alan
+    faaliyet_kodu = models.CharField(max_length=10, null=True, blank=True)  
 
     class Meta:
         managed = False
